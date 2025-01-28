@@ -14,7 +14,7 @@ LABRATS es un juego arcade 1vs1 en el que ambos jugadores tomarán el rol de una
 Aquí se recogen los pasos para la instalación del proyecto en Windows.
 
  	Descarga
-Descarga LabRats-fase3.zip en la [pestaña de releases](https://github.com/ismaest/JER-24-25/releases).
+Descarga LabRats-fase3.zip en la [pestaña de releases](https://github.com/SmartWasTaken/Recuperacion-FASE-3/releases).
  	
 	Dependencias
 - [Java 8](https://www.java.com/en/download/) (o una versión superior).
@@ -493,7 +493,7 @@ Se ha ocupado del análisis DAFO, los estados y parte de las interfaces. Dentro 
  Ha programado las mecánicas del juego, reorganizado y reescrito código. También ha sido el encargado de colocar todos los elementos del escenario y comprobar su finalidad.
  
  	5.4.3. Tercera fase de desarrollo: Xabier
-Se ha encargado de programar la parte del servidor, creando y manejando las clases UserService y User controller. Ha programado la lógica de calcular cuántos jugadores hay de forma simultánea, así como ayudar también en la persistencia de datos.
+Se ha encargado de programar la parte del servidor, creando y manejando las clases UserService y UserController. Ha programado la lógica de calcular cuántos jugadores hay de forma simultánea, así como ayudar también en la persistencia de datos.
 
 > ## 6. Funciones de red
 
@@ -501,6 +501,7 @@ Se ha encargado de programar la parte del servidor, creando y manejando las clas
 - Información sobre el estado de la partida (posición del ratón, posición de la mano...).
 - Mostrar cuántos jugadores están conectados al servidor en ese momento.
 - Información persistente sobre los usuarios creados en sesiones anteriores. Se almacenan en un .txt para ser recuperados más adelante.
+- Chat para que los usuarios conectados puedan comunicarse entre sí.
  
 > ## 7. Créditos
 
