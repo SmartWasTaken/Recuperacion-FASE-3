@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -21,10 +22,12 @@ public class UserService {
     private Map<String, Instant> connectedUsers = new ConcurrentHashMap<>();
     private List<User> userList = new ArrayList<>(); // Simulamos la base de datos en memoria
     private Map<String, Boolean> playerConnections = new HashMap<>(); // Mapa para gestionar el estado de conexión de los jugadores
+    private String currentUser;
 
     // Cargar usuarios desde el archivo al iniciar el servidor
     @PostConstruct
-    private void loadUsersFromFile() {
+    private void setFromFile() {
+    	userList.clear();
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -44,6 +47,16 @@ public class UserService {
         startCleanupTask();
     }
 
+ // Método para obtener el usuario conectado
+    public String getCurrentUser() {
+        return currentUser;
+    }
+
+    // Método para establecer el usuario conectado
+    public void setCurrentUser(String userName) {
+        this.currentUser = userName;
+    }
+    
     // Guardar usuarios en el archivo
     private void saveUsersToFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
@@ -56,39 +69,6 @@ public class UserService {
             e.printStackTrace();
         }
     }
-
-    // Guardar el estado de las conexiones en un archivo
-    //private void saveConnectionsToFile() {
-    //    try (BufferedWriter writer = new BufferedWriter(new FileWriter(CONNECTIONS_FILE))) {
-    //      for (Map.Entry<String, Boolean> entry : playerConnections.entrySet()) {
-    //          writer.write(entry.getKey() + "," + entry.getValue());
-    //          writer.newLine();
-    //      }
-    //      System.out.println("Estado de las conexiones guardado en " + CONNECTIONS_FILE);
-    //  } catch (IOException e) {
-    //      e.printStackTrace();
-    //  }
-    //}
-    
-    // Cargar el estado de las conexiones desde un archivo
-    //private void loadConnectionsFromFile() {
-    //  try (BufferedReader reader = new BufferedReader(new FileReader(CONNECTIONS_FILE))) {
-    //      String line;
-    //      while ((line = reader.readLine()) != null) {
-    //          String[] parts = line.split(",");
-    //          if (parts.length == 2) {
-    //              String playerId = parts[0];
-    //              Boolean isConnected = Boolean.parseBoolean(parts[1]);
-    //              playerConnections.put(playerId, isConnected);
-    //          }
-    //      }
-    //      System.out.println("Estado de las conexiones cargado desde " + CONNECTIONS_FILE);
-    //  } catch (FileNotFoundException e) {
-    //      System.out.println(CONNECTIONS_FILE + " no encontrado. Se creará uno nuevo al guardar el estado de las conexiones.");
-    //  } catch (IOException e) {
-    //      e.printStackTrace();
-    //  }
-    //}
     
     // Obtener todos los usuarios
     public List<User> getAllUsers() {
@@ -105,13 +85,19 @@ public class UserService {
 
     // Agregar un nuevo usuario
     public boolean addUser(User newUser) {
+        // Verificar si el usuario ya existe en userList
         if (getUser(newUser.getName(), newUser.getPassword()) == null) {
+            // Asegurarnos de que no hay residuos en playerConnections
+            playerConnections.remove(newUser.getName());
+            
+            // Agregar el nuevo usuario
             userList.add(newUser);
             saveUsersToFile();
             return true;
         }
-        return false;
+        return false; // El usuario ya existe
     }
+
 
     // Actualizar un usuario
     public boolean updateUser(String oldName, String oldPass, User updatedUser) {
@@ -129,21 +115,36 @@ public class UserService {
     public boolean deleteUser(String name, String password) {
         boolean removed = userList.removeIf(user -> user.getName().equals(name) && user.getPassword().equals(password));
         if (removed) {
-            saveUsersToFile();
+            saveUsersToFile(); // Sobrescribe el archivo después de eliminar
+            setFromFile();
+            connectedUsers.remove(name); // Elimina también de los usuarios conectados
+            playerConnections.remove(name); // Limpia las conexiones de jugadores
+            System.out.println("Usuario eliminado: " + name);
+        } else {
+            System.out.println("Usuario no encontrado para eliminar: " + name);
         }
         return removed;
     }
-
     // Conectar un jugador (marcar como conectado)
     public boolean connectPlayer(String playerId) {
+        // Validar que el jugador exista en userList
+        boolean userExists = userList.stream()
+                                     .anyMatch(user -> user.getName().equals(playerId));
+        if (!userExists) {
+            System.out.println("El jugador no existe: " + playerId);
+            return false; // No se puede conectar un jugador inexistente
+        }
+
+        // Verificar si ya está conectado
         if (playerConnections.containsKey(playerId)) {
             return false; // El jugador ya está conectado
         }
+
+        // Marcar como conectado
         playerConnections.put(playerId, true);
-        //saveConnectionsToFile();  // Guardamos el estado de las conexiones
         return true;
     }
-
+    
     // Desconectar un jugador (marcar como desconectado)
     public boolean disconnectPlayer(String playerId) {
         if (!playerConnections.containsKey(playerId)) {
