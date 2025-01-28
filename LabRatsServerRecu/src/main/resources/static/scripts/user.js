@@ -42,7 +42,7 @@ class UserScene extends Phaser.Scene {
         //    this.scene.stop('UserScene');
         //    this.scene.start('ChooseNetType');
         //});
-        this.buttonAnims();
+        //this.buttonAnims();
         
     }
 
